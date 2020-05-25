@@ -30,37 +30,49 @@ jawNA <- (colSums(is.na(jawbone)) == 0)
 
 jawclean <- jawbone[ ,jawNA]
 
-jawclean2 <- jawclean[1:1000, -c(1:6) ] #%>% select(-(1:6))
+jawclean2 <- jawclean[1:6500, -c(1:6) ] # selected only rows 1:1000 for faster processing. Use all rows for full dataset
+#view(jawclean2)
+```
+
+## TEST SET
+This set will not be used as validation but to answer final questions for project.
+
+```{r eval=FALSE}
+Testfile <- read.csv(file.choose(), header = TRUE, na.strings = c("NA", "#DIV/0!", ""))
+TestNA <- (colSums(is.na(Testfile)) == 0)
+Testset <- Testfile[ ,TestNA]
+
 ```
 
 
-view(jawclean2)
-#jawclean <- jawbone %>% drop_na()  %>% select(-c(1:5, 14, 17))
-
-#jawclean <- as.numeric(jawclean[ ,-1])
 
 
-Split the data into training and testing sets.
+
+## Split the data into training and testing sets.
 
 ```{r eval=TRUE, echo=TRUE}
 set.seed(100)
 
 
 
-jawboneIndex <- createDataPartition(y=jawclean2$classe, p=0.6, list = FALSE)
+jawboneIndex <- createDataPartition(y=jawclean2$classe, p=0.6, list = FALSE) # 60% (0.6) for training and 40% for testing
 
 jawbonetrain <- jawclean2[jawboneIndex, ]
 jawbonetest <- jawclean2[-jawboneIndex, ]
+
+y <- jawbonetrain$classe
 ```
 
 
 
 
 
-y <- jawbonetrain$classe
 
-# MISSING DATA handling, knnImpute
 
+## MISSING DATA: 
+We handle missing data using method 'knnImpute'
+
+```{r }
 jawbonemissing <- preProcess(jawbonetrain, method = c("knnImpute"))
 
 
@@ -73,9 +85,12 @@ jawbonetrain <- predict(jawbonemissing, newdata = jawbonetrain)
 anyNA(jawbonetrain)
 
 jawtestmissing <- predict(jawbonemissing, newdata = jawbonetest)
+```
 
-#DUMMY VARIABLES
+## Dummy Variables
+We assign dummy variables to transform factor classes to numeric for easy analysis.
 
+```{r }
 jawbonedummy <- dummyVars(classe~., data = jawbonetrain)
 # juicetrain <- predict(juicemissing, newdata = juicetrain)
 ## anyNA(juicetrain)
@@ -85,7 +100,10 @@ jawdumpre <- predict(jawbonedummy, newdata = jawbonetrain)
 jawbonetrain <- data.frame(jawdumpre)
 
 jawbonetrain$classe <- y
+jawtestdummy <- predict(jawbonedummy, newdata = jawtestmissing)
+```
 
+```{r eval=FALSE, echo=FALSE}
 # DUMMY VARIABLES
 
 # juicedummy  <- dummyVars(Purchase~., data = juicetrain)
@@ -95,16 +113,28 @@ jawbonetrain$classe <- y
 # juicetrain <- data.frame(juicedumpre)
 # 
 # juicetrain$Purchase <- y   #y above
+```
 
-jawtestdummy <- predict(jawbonedummy, newdata = jawtestmissing)
 
-jawModel <- train(classe~., data = jawbonetrain, method = "rf")
+## Train the Model
 
-jawModel
+```{r eval=TRUE}
+jawModel <- train(classe~., data = jawbonetrain, method = "rf") # random forests
+
+jawModel # view the model
+```
+
+Plot the Model and see which variables are most important
+
+```{r }
 plot(jawModel, main = "Model Accuracies")
-varimport <- varImp(jawModel)
-plot(varimport, main = "Variable Importance")
 
+varimport <- varImp(jawModel)
+
+plot(varimport, main = "Variable Importance")
+```
+
+```{r echo=FALSE, eval=FALSE}
 #juicetestdummy <- predict(juicedummy, newdata = juicetestmissing)
 
 #TRAIN
@@ -121,12 +151,16 @@ plot(varimport, main = "Variable Importance")
 #plot(Varimport, main = "Variable Importance with MARS")
 
 #juiceModel
-# Predict on Test Data
+## Predict Model Fit
+Predict the model on test data and view confusion matrix to determine our accuracy.
 
+```{r }
 jawPredict <- predict(jawModel , jawtestdummy)
 
 #check as.factor()
 confusionMatrix(data = jawPredict, reference = as.factor(jawbonetest$classe) )
+```
+
 
 
 
