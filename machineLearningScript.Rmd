@@ -124,7 +124,18 @@ jawPredict <- predict(jawModel , jawtestdummy)
 
 confusionMatrix(data = jawPredict, reference = as.factor(jawbonetest$classe) )
 ```
+
+```{r test_delete}
+testpredict <- predict(jawModel, Testset)
+
+testpredict  # view the results
+```
 Discussion:
+
+To build the model, we use the training data and partition it into two, 60% for training our model and 40 percent for testing accuracy of the model. Tha data was preprocessed to handle missing values. Finally we use random forest algorithm to train the model. Cross validation was done by boostrap. The out of sample error tells us how well the algorithm was able to predict values from the test data. In this case the error was about 0.004. 
+
+
+
 
 
 
