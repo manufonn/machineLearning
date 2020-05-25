@@ -1,0 +1,157 @@
+---
+title: "Practical Machine Learning"
+author: "Emmanuel Fon"
+date: "5/24/2020"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r eval=TRUE, echo=TRUE, error=FALSE}
+library(caret) 
+library(lattice)
+library(ggplot2)
+library(e1071)
+library(randomForest)
+library(RANN)
+library(klaR)
+library(tidyverse)
+library(skimr)
+```
+Load the data into R
+
+```{r eval=TRUE, echo=TRUE}
+jawbone <- read.csv(file.choose(), header = TRUE, na.strings= c("NA", "#DIV/0!", ""))#, "#DIV/0!")) # file.choose()  CHOOSE FILE
+
+
+jawNA <- (colSums(is.na(jawbone)) == 0)
+
+jawclean <- jawbone[ ,jawNA]
+
+jawclean2 <- jawclean[1:1000, -c(1:6) ] #%>% select(-(1:6))
+```
+
+
+view(jawclean2)
+#jawclean <- jawbone %>% drop_na()  %>% select(-c(1:5, 14, 17))
+
+#jawclean <- as.numeric(jawclean[ ,-1])
+
+
+Split the data into training and testing sets.
+
+```{r eval=TRUE, echo=TRUE}
+set.seed(100)
+
+
+
+jawboneIndex <- createDataPartition(y=jawclean2$classe, p=0.6, list = FALSE)
+
+jawbonetrain <- jawclean2[jawboneIndex, ]
+jawbonetest <- jawclean2[-jawboneIndex, ]
+```
+
+
+
+
+
+y <- jawbonetrain$classe
+
+# MISSING DATA handling, knnImpute
+
+jawbonemissing <- preProcess(jawbonetrain, method = c("knnImpute"))
+
+
+#juicemissing <- preProcess(juicetrain, method = c("knnImpute"))
+
+#juicemissing
+ 
+jawbonetrain <- predict(jawbonemissing, newdata = jawbonetrain)
+
+anyNA(jawbonetrain)
+
+jawtestmissing <- predict(jawbonemissing, newdata = jawbonetest)
+
+#DUMMY VARIABLES
+
+jawbonedummy <- dummyVars(classe~., data = jawbonetrain)
+# juicetrain <- predict(juicemissing, newdata = juicetrain)
+## anyNA(juicetrain)
+## juicetestmissing <- predict(juicemissing, newdata = juicetest)
+jawdumpre <- predict(jawbonedummy, newdata = jawbonetrain)
+
+jawbonetrain <- data.frame(jawdumpre)
+
+jawbonetrain$classe <- y
+
+# DUMMY VARIABLES
+
+# juicedummy  <- dummyVars(Purchase~., data = juicetrain)
+# 
+# juicedumpre <- predict(juicedummy, newdata = juicetrain)
+# 
+# juicetrain <- data.frame(juicedumpre)
+# 
+# juicetrain$Purchase <- y   #y above
+
+jawtestdummy <- predict(jawbonedummy, newdata = jawtestmissing)
+
+jawModel <- train(classe~., data = jawbonetrain, method = "rf")
+
+jawModel
+plot(jawModel, main = "Model Accuracies")
+varimport <- varImp(jawModel)
+plot(varimport, main = "Variable Importance")
+
+#juicetestdummy <- predict(juicedummy, newdata = juicetestmissing)
+
+#TRAIN
+
+#juiceModel <- train(Purchase~., data = juicetrain, method = "rf")
+
+# juicefitted <- predict(juiceModel)
+#juiceModel
+
+# plot(juiceModel, main = "Model Accuracies with MARS")
+
+## Variable Importance
+#Varimport <- varImp(juiceModel)
+#plot(Varimport, main = "Variable Importance with MARS")
+
+#juiceModel
+# Predict on Test Data
+
+jawPredict <- predict(jawModel , jawtestdummy)
+
+#check as.factor()
+confusionMatrix(data = jawPredict, reference = as.factor(jawbonetest$classe) )
+
+
+
+
+
+
+
+
+
+## R Markdown
+
+This is an R Markdown document. Markdown is a simple formatting syntax for authoring HTML, PDF, and MS Word documents. For more details on using R Markdown see <http://rmarkdown.rstudio.com>.
+
+When you click the **Knit** button a document will be generated that includes both content as well as the output of any embedded R code chunks within the document. You can embed an R code chunk like this:
+
+```{r cars}
+summary(cars)
+```
+
+## Including Plots
+
+You can also embed plots, for example:
+
+```{r pressure, echo=FALSE}
+plot(pressure)
+```
+
+Note that the `echo = FALSE` parameter was added to the code chunk to prevent printing of the R code that generated the plot.
