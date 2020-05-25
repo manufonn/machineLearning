@@ -5,6 +5,14 @@ date: "5/24/2020"
 output: html_document
 ---
 
+Background:
+
+Using devices such as Jawbone Up, Nike FuelBand, and Fitbit it is now possible to collect a large amount of data about personal activity relatively inexpensively. These type of devices are part of the quantified self movement – a group of enthusiasts who take measurements about themselves regularly to improve their health, to find patterns in their behavior, or because they are tech geeks. One thing that people regularly do is quantify how much of a particular activity they do, but they rarely quantify how well they do it. In this project, your goal will be to use data from accelerometers on the belt, forearm, arm, and dumbell of 6 participants. They were asked to perform barbell lifts correctly and incorrectly in 5 different ways. More information is available from the website here: http://web.archive.org/web/20161224072740/http:/groupware.les.inf.puc-rio.br/har (see the section on the Weight Lifting Exercise Dataset).
+
+GOAL:
+
+The goal of your project is to predict the manner in which they did the exercise. This is the "classe" variable in the training set. You may use any of the other variables to predict with. You should create a report describing how you built your model, how you used cross validation, what you think the expected out of sample error is, and why you made the choices you did. You will also use your prediction model to predict 20 different test cases.
+
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
 ```
@@ -23,108 +31,81 @@ library(skimr)
 Load the data into R
 
 ```{r eval=TRUE, echo=TRUE}
-jawbone <- read.csv(file.choose(), header = TRUE, na.strings= c("NA", "#DIV/0!", ""))#, "#DIV/0!")) # file.choose()  CHOOSE FILE
-
+jawbone <- read.csv(file.choose(), header = TRUE, na.strings= c("NA", "#DIV/0!", ""))#, "#DIV/0!")) # file.choose() on prompt CHOOSE FILE
 
 jawNA <- (colSums(is.na(jawbone)) == 0)
 
 jawclean <- jawbone[ ,jawNA]
 
-jawclean2 <- jawclean[1:6500, -c(1:6) ] # selected only rows 1:1000 for faster processing. Use all rows for full dataset
+jawclean2 <- jawclean[, -c(1:6) ] 
+
+# selected only rows 1:1000 for faster processing. Use all rows for full dataset
 #view(jawclean2)
 ```
 
-## TEST SET
+# Test Set
 This set will not be used as validation but to answer final questions for project.
 
-```{r eval=FALSE}
+```{r eval=TRUE}
 Testfile <- read.csv(file.choose(), header = TRUE, na.strings = c("NA", "#DIV/0!", ""))
 TestNA <- (colSums(is.na(Testfile)) == 0)
 Testset <- Testfile[ ,TestNA]
 
 ```
 
-
-
-
-
-## Split the data into training and testing sets.
+# Split the data into training and testing sets.
 
 ```{r eval=TRUE, echo=TRUE}
 set.seed(100)
 
-
-
-jawboneIndex <- createDataPartition(y=jawclean2$classe, p=0.6, list = FALSE) # 60% (0.6) for training and 40% for testing
+jawboneIndex <- createDataPartition(y=jawclean2$classe, p=0.6, list = FALSE) 
+# 60% (0.6) for training and 40% for testing
 
 jawbonetrain <- jawclean2[jawboneIndex, ]
+
 jawbonetest <- jawclean2[-jawboneIndex, ]
 
 y <- jawbonetrain$classe
 ```
 
-
-
-
-
-
-
-## MISSING DATA: 
-We handle missing data using method 'knnImpute'
+# Missing Data: 
+We handle missing data using method 'knnImpute' using nearest neighbors.
 
 ```{r }
 jawbonemissing <- preProcess(jawbonetrain, method = c("knnImpute"))
 
-
-#juicemissing <- preProcess(juicetrain, method = c("knnImpute"))
-
-#juicemissing
- 
 jawbonetrain <- predict(jawbonemissing, newdata = jawbonetrain)
 
-anyNA(jawbonetrain)
-
 jawtestmissing <- predict(jawbonemissing, newdata = jawbonetest)
+
+anyNA(jawbonetrain)
 ```
 
-## Dummy Variables
+# Dummy Variables
 We assign dummy variables to transform factor classes to numeric for easy analysis.
 
 ```{r }
 jawbonedummy <- dummyVars(classe~., data = jawbonetrain)
-# juicetrain <- predict(juicemissing, newdata = juicetrain)
-## anyNA(juicetrain)
-## juicetestmissing <- predict(juicemissing, newdata = juicetest)
+
 jawdumpre <- predict(jawbonedummy, newdata = jawbonetrain)
 
 jawbonetrain <- data.frame(jawdumpre)
 
 jawbonetrain$classe <- y
+
 jawtestdummy <- predict(jawbonedummy, newdata = jawtestmissing)
 ```
 
-```{r eval=FALSE, echo=FALSE}
-# DUMMY VARIABLES
+# Train the Model
 
-# juicedummy  <- dummyVars(Purchase~., data = juicetrain)
-# 
-# juicedumpre <- predict(juicedummy, newdata = juicetrain)
-# 
-# juicetrain <- data.frame(juicedumpre)
-# 
-# juicetrain$Purchase <- y   #y above
+```{r train_model, eval=TRUE}
+jawModel <- train(classe~., data = jawbonetrain, method = "rf") 
+                         # random forest algorithm
+
+jawModel                 # view the model
 ```
 
-
-## Train the Model
-
-```{r eval=TRUE}
-jawModel <- train(classe~., data = jawbonetrain, method = "rf") # random forests
-
-jawModel # view the model
-```
-
-Plot the Model and see which variables are most important
+Plot the Model and see which variables are most important to use for prediction.
 
 ```{r }
 plot(jawModel, main = "Model Accuracies")
@@ -134,32 +115,34 @@ varimport <- varImp(jawModel)
 plot(varimport, main = "Variable Importance")
 ```
 
-```{r echo=FALSE, eval=FALSE}
-#juicetestdummy <- predict(juicedummy, newdata = juicetestmissing)
+# Predict Model Fit
 
-#TRAIN
-
-#juiceModel <- train(Purchase~., data = juicetrain, method = "rf")
-
-# juicefitted <- predict(juiceModel)
-#juiceModel
-
-# plot(juiceModel, main = "Model Accuracies with MARS")
-
-## Variable Importance
-#Varimport <- varImp(juiceModel)
-#plot(Varimport, main = "Variable Importance with MARS")
-
-#juiceModel
-## Predict Model Fit
-Predict the model on test data and view confusion matrix to determine our accuracy.
+Predict the model on test data and view confusion matrix to determine algorithm accuracy.
 
 ```{r }
 jawPredict <- predict(jawModel , jawtestdummy)
 
-#check as.factor()
 confusionMatrix(data = jawPredict, reference = as.factor(jawbonetest$classe) )
 ```
+Discussion:
+
+
+
+REFERENCES:
+
+1. Rajesh Dorbala
+Introduction to Machine Learning and Caret Package in R
+https://www.youtube.com/watch?v=JgRxbKut6yA
+
+
+2.Selva Prabhakaran, Caret Package – A Practical Guide to Machine Learning in R
+
+https://www.machinelearningplus.com/machine-learning/caret-package/#2initialsetuploadthepackageanddataset
+
+
+
+3. Velloso, E.; Bulling, A.; Gellersen, H.; Ugulino, W.; Fuks, H. Qualitative Activity Recognition of Weight Lifting Exercises. Proceedings of 4th International Conference in Cooperation with SIGCHI (Augmented Human '13) . Stuttgart, Germany: ACM SIGCHI, 2013.
+Read more: http://web.archive.org/web/20161224072740/http:/groupware.les.inf.puc-rio.br/har#ixzz4TkBjmlfV
 
 
 
@@ -169,23 +152,3 @@ confusionMatrix(data = jawPredict, reference = as.factor(jawbonetest$classe) )
 
 
 
-
-## R Markdown
-
-This is an R Markdown document. Markdown is a simple formatting syntax for authoring HTML, PDF, and MS Word documents. For more details on using R Markdown see <http://rmarkdown.rstudio.com>.
-
-When you click the **Knit** button a document will be generated that includes both content as well as the output of any embedded R code chunks within the document. You can embed an R code chunk like this:
-
-```{r cars}
-summary(cars)
-```
-
-## Including Plots
-
-You can also embed plots, for example:
-
-```{r pressure, echo=FALSE}
-plot(pressure)
-```
-
-Note that the `echo = FALSE` parameter was added to the code chunk to prevent printing of the R code that generated the plot.
