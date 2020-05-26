@@ -9,6 +9,7 @@ Background:
 
 Using devices such as Jawbone Up, Nike FuelBand, and Fitbit it is now possible to collect a large amount of data about personal activity relatively inexpensively. These type of devices are part of the quantified self movement – a group of enthusiasts who take measurements about themselves regularly to improve their health, to find patterns in their behavior, or because they are tech geeks. One thing that people regularly do is quantify how much of a particular activity they do, but they rarely quantify how well they do it. In this project, your goal will be to use data from accelerometers on the belt, forearm, arm, and dumbell of 6 participants. They were asked to perform barbell lifts correctly and incorrectly in 5 different ways. More information is available from the website here: http://web.archive.org/web/20161224072740/http:/groupware.les.inf.puc-rio.br/har (see the section on the Weight Lifting Exercise Dataset).
 
+
 GOAL:
 
 The goal of your project is to predict the manner in which they did the exercise. This is the "classe" variable in the training set. You may use any of the other variables to predict with. You should create a report describing how you built your model, how you used cross validation, what you think the expected out of sample error is, and why you made the choices you did. You will also use your prediction model to predict 20 different test cases.
@@ -17,7 +18,7 @@ The goal of your project is to predict the manner in which they did the exercise
 knitr::opts_chunk$set(echo = TRUE)
 ```
 
-```{r eval=TRUE, echo=TRUE, error=FALSE}
+```{r eval=TRUE, echo=TRUE, error=FALSE, message=FALSE}
 library(caret) 
 library(lattice)
 library(ggplot2)
@@ -53,6 +54,8 @@ Testset <- Testfile[ ,TestNA]
 
 ```
 
+
+
 # Split the data into training and testing sets.
 
 ```{r eval=TRUE, echo=TRUE}
@@ -68,42 +71,21 @@ jawbonetest <- jawclean2[-jawboneIndex, ]
 y <- jawbonetrain$classe
 ```
 
-# Missing Data: 
-We handle missing data using method 'knnImpute' using nearest neighbors.
 
-```{r }
-jawbonemissing <- preProcess(jawbonetrain, method = c("knnImpute"))
-
-jawbonetrain <- predict(jawbonemissing, newdata = jawbonetrain)
-
-jawtestmissing <- predict(jawbonemissing, newdata = jawbonetest)
-
-anyNA(jawbonetrain)
-```
-
-# Dummy Variables
-We assign dummy variables to transform factor classes to numeric for easy analysis.
-
-```{r }
-jawbonedummy <- dummyVars(classe~., data = jawbonetrain)
-
-jawdumpre <- predict(jawbonedummy, newdata = jawbonetrain)
-
-jawbonetrain <- data.frame(jawdumpre)
-
-jawbonetrain$classe <- y
-
-jawtestdummy <- predict(jawbonedummy, newdata = jawtestmissing)
-```
 
 # Train the Model
 
-```{r train_model, eval=TRUE}
-jawModel <- train(classe~., data = jawbonetrain, method = "rf") 
-                         # random forest algorithm
 
-jawModel                 # view the model
+```{r }
+jawModel <- train(classe~., data = jawbonetrain, method = "rf") 
+
+                # random forest algorithm
+
+jawModel       # view the model
 ```
+
+
+
 
 Plot the Model and see which variables are most important to use for prediction.
 
@@ -115,21 +97,41 @@ varimport <- varImp(jawModel)
 plot(varimport, main = "Variable Importance")
 ```
 
-# Predict Model Fit
+
+
+
+#Predict the Outcomes
 
 Predict the model on test data and view confusion matrix to determine algorithm accuracy.
 
 ```{r }
-jawPredict <- predict(jawModel , jawtestdummy)
+
+jawPredict <- predict(jawModel, jawbonetest)
+
 
 confusionMatrix(data = jawPredict, reference = as.factor(jawbonetest$classe) )
+
 ```
 
-```{r test_delete}
+
+
+
+
+Use the model to predict on the Testset of 20
+
+```{r }
+
 testpredict <- predict(jawModel, Testset)
 
-testpredict  # view the results
+testpredict  # view the result predicted from Testset of 20
+
 ```
+
+
+
+
+
+
 Discussion:
 
 To build the model, we use the training data and partition it into two, 60% for training our model and 40 percent for testing accuracy of the model. Tha data was preprocessed to handle missing values. Finally we use random forest algorithm to train the model. Cross validation was done by boostrap. The out of sample error tells us how well the algorithm was able to predict values from the test data. In this case the error was about 0.004. 
@@ -142,13 +144,10 @@ To build the model, we use the training data and partition it into two, 60% for 
 REFERENCES:
 
 1. Rajesh Dorbala
-Introduction to Machine Learning and Caret Package in R
-https://www.youtube.com/watch?v=JgRxbKut6yA
+Introduction to Machine Learning and Caret Package in R    https://www.youtube.com/watch?v=JgRxbKut6yA
 
 
-2.Selva Prabhakaran, Caret Package – A Practical Guide to Machine Learning in R
-
-https://www.machinelearningplus.com/machine-learning/caret-package/#2initialsetuploadthepackageanddataset
+2.Selva Prabhakaran, Caret Package – A Practical Guide to Machine Learning in R https://www.machinelearningplus.com/machine-learning/caret-package/#2initialsetuploadthepackageanddataset
 
 
 
