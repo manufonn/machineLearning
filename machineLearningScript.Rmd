@@ -31,6 +31,7 @@ library(skimr)
 ```
 Load the data into R
 
+
 ```{r eval=TRUE, echo=TRUE}
 jawbone <- read.csv(file.choose(), header = TRUE, na.strings= c("NA", "#DIV/0!", ""))#, "#DIV/0!")) # file.choose() on prompt CHOOSE FILE
 
