@@ -27,17 +27,17 @@ The data for this project come from this source: http://web.archive.org/web/2016
 
 REFERENCES:
 
-1. Velloso, E.; Bulling, A.; Gellersen, H.; Ugulino, W.; Fuks, H. Qualitative Activity Recognition of Weight Lifting Exercises. Proceedings of 4th International Conference in Cooperation with SIGCHI (Augmented Human '13) . Stuttgart, Germany: ACM SIGCHI, 2013.
+1. Rajesh Dorbala
+Introduction to Machine Learning and Caret Package in R    https://www.youtube.com/watch?v=JgRxbKut6yA
 
+
+2.Selva Prabhakaran, Caret Package – A Practical Guide to Machine Learning in R https://www.machinelearningplus.com/machine-learning/caret-package/#2initialsetuploadthepackageanddataset
+
+
+
+3. Velloso, E.; Bulling, A.; Gellersen, H.; Ugulino, W.; Fuks, H. Qualitative Activity Recognition of Weight Lifting Exercises. Proceedings of 4th International Conference in Cooperation with SIGCHI (Augmented Human '13) . Stuttgart, Germany: ACM SIGCHI, 2013.
 Read more: http://web.archive.org/web/20161224072740/http:/groupware.les.inf.puc-rio.br/har#ixzz4TkBjmlfV
 
-2.Selva Prabhakaran, Caret Package – A Practical Guide to Machine Learning in R
-
-https://www.machinelearningplus.com/machine-learning/caret-package/#2initialsetuploadthepackageanddataset
-
-3. Rajesh Dorbala
-Introduction to Machine Learning and Caret Package in R
-https://www.youtube.com/watch?v=JgRxbKut6yA
 
 
 
